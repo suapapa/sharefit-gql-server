@@ -2,27 +2,57 @@
 #
 # https://gqlgen.com/getting-started/
 
-type Todo {
+# type Todo {
+#   id: ID!
+#   text: String!
+#   done: Boolean!
+#   user: User!
+# }
+
+# type User {
+#   id: ID!
+#   name: String!
+# }
+
+# type Query {
+#   todos: [Todo!]!
+# }
+
+# input NewTodo {
+#   text: String!
+#   userId: String!
+# }
+
+# type Mutation {
+#   createTodo(input: NewTodo!): Todo!
+# }
+
+type Card {
   id: ID!
-  text: String!
-  done: Boolean!
-  user: User!
+  training: String!
+  currCnt: Int!
+  totalCnt: Int!
+  # expiry: Date!
+  users: [User!]
 }
+
+# scalar Date
 
 type User {
   id: ID!
   name: String!
+  phoneNumber: String!
+}
+
+type Center {
+  id: ID!
+  name: String!
+  phoneNumber: String!
+  cards: [Card]!
 }
 
 type Query {
-  todos: [Todo!]!
-}
-
-input NewTodo {
-  text: String!
-  userId: String!
-}
-
-type Mutation {
-  createTodo(input: NewTodo!): Todo!
+  cards: [Card]
+  users: [User]
+  centers: [Center]
 }
