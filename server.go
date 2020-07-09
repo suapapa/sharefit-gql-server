@@ -9,6 +9,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/suapapa/sharefit-gql-server/graph"
 	"github.com/suapapa/sharefit-gql-server/graph/generated"
+	"github.com/suapapa/sharefit-gql-server/internal/database"
 )
 
 const defaultPort = "8080"
@@ -17,6 +18,11 @@ func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
+	}
+
+	err := database.InitDB()
+	if err != nil {
+		panic(err)
 	}
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
