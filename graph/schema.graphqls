@@ -27,13 +27,19 @@
 #   createTodo(input: NewTodo!): Todo!
 # }
 
-type Card {
+type Membership {
   id: ID!
+  """
+  training represents training course for the membership
+  """
   training: String!
   currCnt: Int!
   totalCnt: Int!
   # expiry: Date!
-  users: [User!]
+  """
+  users reperesents users who share this membership
+  """
+  users: [User!]!
 }
 
 # scalar Date
@@ -48,11 +54,11 @@ type Center {
   id: ID!
   name: String!
   phoneNumber: String!
-  cards: [Card]!
+  memberships: [Membership]!
 }
 
 type Query {
-  cards: [Card]
+  memberships: [Membership]
   users: [User]
   centers: [Center]
 }

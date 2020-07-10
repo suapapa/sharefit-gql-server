@@ -11,11 +11,11 @@ import (
 	"github.com/suapapa/sharefit-gql-server/internal/database"
 )
 
-func (r *queryResolver) Cards(ctx context.Context) ([]*model.Card, error) {
+func (r *queryResolver) Memberships(ctx context.Context) ([]*model.Membership, error) {
 	var cards []database.Card
 	database.SharefitDB.Find(&cards)
 
-	var ret []*model.Card
+	var ret []*model.Membership
 	for _, v := range cards {
 		database.SharefitDB.Where("card_id = ?", v.ID).Find(&v.Users)
 		var users []*model.User
@@ -26,7 +26,7 @@ func (r *queryResolver) Cards(ctx context.Context) ([]*model.Card, error) {
 			})
 		}
 
-		ret = append(ret, &model.Card{
+		ret = append(ret, &model.Membership{
 			Training: v.Training,
 			CurrCnt:  v.CurrCnt,
 			TotalCnt: v.TotalCnt,
@@ -58,9 +58,9 @@ func (r *queryResolver) Centers(ctx context.Context) ([]*model.Center, error) {
 	var ret []*model.Center
 	for _, v := range centers {
 		database.SharefitDB.Where("center_id = ?", v.ID).Find(&v.Cards)
-		var cards []*model.Card
+		var cards []*model.Membership
 		for _, c := range v.Cards {
-			cards = append(cards, &model.Card{
+			cards = append(cards, &model.Membership{
 				Training: c.Training,
 				CurrCnt:  c.CurrCnt,
 				TotalCnt: c.TotalCnt,
@@ -71,12 +71,11 @@ func (r *queryResolver) Centers(ctx context.Context) ([]*model.Center, error) {
 		ret = append(ret, &model.Center{
 			Name:        v.Name,
 			PhoneNumber: v.PhoneNumber,
-			Cards:       cards,
+			Memberships: cards,
 		})
 	}
 
 	return ret, nil
-
 }
 
 // Query returns generated.QueryResolver implementation.

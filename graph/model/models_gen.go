@@ -2,19 +2,21 @@
 
 package model
 
-type Card struct {
-	ID       string  `json:"id"`
-	Training string  `json:"training"`
-	CurrCnt  int     `json:"currCnt"`
-	TotalCnt int     `json:"totalCnt"`
-	Users    []*User `json:"users"`
+type Center struct {
+	ID          string        `json:"id"`
+	Name        string        `json:"name"`
+	PhoneNumber string        `json:"phoneNumber"`
+	Memberships []*Membership `json:"memberships"`
 }
 
-type Center struct {
-	ID          string  `json:"id"`
-	Name        string  `json:"name"`
-	PhoneNumber string  `json:"phoneNumber"`
-	Cards       []*Card `json:"cards"`
+type Membership struct {
+	ID string `json:"id"`
+	// training represents training course for the membership
+	Training string `json:"training"`
+	CurrCnt  int    `json:"currCnt"`
+	TotalCnt int    `json:"totalCnt"`
+	// users reperesents users who share this membership
+	Users []*User `json:"users"`
 }
 
 type User struct {
