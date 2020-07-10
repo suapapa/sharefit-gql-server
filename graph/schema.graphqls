@@ -63,3 +63,12 @@ type Query {
   user(userId: ID): User
   centers: [Center]
 }
+
+input NewUser {
+  name: String!
+  phoneNumber: String!
+}
+
+type Mutation {
+  createUser(input: NewUser!): User!
+}

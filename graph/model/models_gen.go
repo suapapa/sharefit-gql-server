@@ -20,6 +20,11 @@ type Membership struct {
 	Users []*User `json:"users"`
 }
 
+type NewUser struct {
+	Name        string `json:"name"`
+	PhoneNumber string `json:"phoneNumber"`
+}
+
 type User struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
