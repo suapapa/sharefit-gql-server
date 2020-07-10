@@ -35,14 +35,14 @@ type Membership {
   training: String!
   currCnt: Int!
   totalCnt: Int!
-  # expiry: Date!
+  expiry: Date!
   """
   users reperesents users who share this membership
   """
   users: [User!]!
 }
 
-# scalar Date
+scalar Date
 
 type User {
   id: ID!

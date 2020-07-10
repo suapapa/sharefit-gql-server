@@ -31,6 +31,7 @@ func (r *queryResolver) Memberships(ctx context.Context) ([]*model.Membership, e
 			Training: v.Training,
 			CurrCnt:  v.CurrCnt,
 			TotalCnt: v.TotalCnt,
+			Expiry:   v.Expiry.String(),
 			Users:    users,
 		})
 	}

@@ -15,6 +15,7 @@ type Membership struct {
 	Training string `json:"training"`
 	CurrCnt  int    `json:"currCnt"`
 	TotalCnt int    `json:"totalCnt"`
+	Expiry   string `json:"expiry"`
 	// users reperesents users who share this membership
 	Users []*User `json:"users"`
 }

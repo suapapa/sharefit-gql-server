@@ -50,6 +50,7 @@ type ComplexityRoot struct {
 
 	Membership struct {
 		CurrCnt  func(childComplexity int) int
+		Expiry   func(childComplexity int) int
 		ID       func(childComplexity int) int
 		TotalCnt func(childComplexity int) int
 		Training func(childComplexity int) int
@@ -126,6 +127,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Membership.CurrCnt(childComplexity), true
+
+	case "Membership.expiry":
+		if e.complexity.Membership.Expiry == nil {
+			break
+		}
+
+		return e.complexity.Membership.Expiry(childComplexity), true
 
 	case "Membership.id":
 		if e.complexity.Membership.ID == nil {
@@ -296,14 +304,14 @@ type Membership {
   training: String!
   currCnt: Int!
   totalCnt: Int!
-  # expiry: Date!
+  expiry: Date!
   """
   users reperesents users who share this membership
   """
   users: [User!]!
 }
 
-# scalar Date
+scalar Date
 
 type User {
   id: ID!
@@ -665,6 +673,40 @@ func (ec *executionContext) _Membership_totalCnt(ctx context.Context, field grap
 	res := resTmp.(int)
 	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Membership_expiry(ctx context.Context, field graphql.CollectedField, obj *model.Membership) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Membership",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Expiry, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNDate2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Membership_users(ctx context.Context, field graphql.CollectedField, obj *model.Membership) (ret graphql.Marshaler) {
@@ -2139,6 +2181,11 @@ func (ec *executionContext) _Membership(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "expiry":
+			out.Values[i] = ec._Membership_expiry(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "users":
 			out.Values[i] = ec._Membership_users(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -2517,6 +2564,20 @@ func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interf
 
 func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.SelectionSet, v bool) graphql.Marshaler {
 	res := graphql.MarshalBoolean(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNDate2string(ctx context.Context, v interface{}) (string, error) {
+	return graphql.UnmarshalString(v)
+}
+
+func (ec *executionContext) marshalNDate2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalString(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
