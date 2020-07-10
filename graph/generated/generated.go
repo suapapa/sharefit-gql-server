@@ -59,6 +59,7 @@ type ComplexityRoot struct {
 	Query struct {
 		Centers     func(childComplexity int) int
 		Memberships func(childComplexity int) int
+		User        func(childComplexity int, userID *string) int
 		Users       func(childComplexity int) int
 	}
 
@@ -72,6 +73,7 @@ type ComplexityRoot struct {
 type QueryResolver interface {
 	Memberships(ctx context.Context) ([]*model.Membership, error)
 	Users(ctx context.Context) ([]*model.User, error)
+	User(ctx context.Context, userID *string) (*model.User, error)
 	Centers(ctx context.Context) ([]*model.Center, error)
 }
 
@@ -166,6 +168,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Memberships(childComplexity), true
+
+	case "Query.user":
+		if e.complexity.Query.User == nil {
+			break
+		}
+
+		args, err := ec.field_Query_user_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.User(childComplexity, args["userId"].(*string)), true
 
 	case "Query.users":
 		if e.complexity.Query.Users == nil {
@@ -307,6 +321,7 @@ type Center {
 type Query {
   memberships: [Membership]
   users: [User]
+  user(userId: ID): User
   centers: [Center]
 }`, BuiltIn: false},
 }
@@ -327,6 +342,20 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["userId"]; ok {
+		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userId"] = arg0
 	return args, nil
 }
 
@@ -732,6 +761,44 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 	res := resTmp.([]*model.User)
 	fc.Result = res
 	return ec.marshalOUser2ᚕᚖgithubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_user_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().User(rctx, args["userId"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖgithubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_centers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2125,6 +2192,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_users(ctx, field)
 				return res
 			})
+		case "user":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_user(ctx, field)
+				return res
+			})
 		case "centers":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -2875,6 +2953,29 @@ func (ec *executionContext) marshalOCenter2ᚖgithubᚗcomᚋsuapapaᚋsharefit�
 		return graphql.Null
 	}
 	return ec._Center(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOID2string(ctx context.Context, v interface{}) (string, error) {
+	return graphql.UnmarshalID(v)
+}
+
+func (ec *executionContext) marshalOID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	return graphql.MarshalID(v)
+}
+
+func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOID2string(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec.marshalOID2string(ctx, sel, *v)
 }
 
 func (ec *executionContext) marshalOMembership2githubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐMembership(ctx context.Context, sel ast.SelectionSet, v model.Membership) graphql.Marshaler {

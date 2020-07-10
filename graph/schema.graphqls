@@ -60,5 +60,6 @@ type Center {
 type Query {
   memberships: [Membership]
   users: [User]
+  user(userId: ID): User
   centers: [Center]
 }

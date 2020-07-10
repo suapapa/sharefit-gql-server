@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/suapapa/sharefit-gql-server/graph/generated"
 	"github.com/suapapa/sharefit-gql-server/graph/model"
@@ -49,6 +50,17 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 		})
 	}
 	return ret, nil
+}
+
+func (r *queryResolver) User(ctx context.Context, userID *string) (*model.User, error) {
+	var user database.User
+	database.SharefitDB.Where("id = ?", userID).First(&user)
+
+	return &model.User{
+		ID:          fmt.Sprint(user.ID),
+		Name:        user.Name,
+		PhoneNumber: user.PhoneNumber,
+	}, nil
 }
 
 func (r *queryResolver) Centers(ctx context.Context) ([]*model.Center, error) {
