@@ -84,6 +84,23 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID *string, user 
 	}, nil
 }
 
+func (r *mutationResolver) DeleteUser(ctx context.Context, userID *string) (*model.User, error) {
+	var user database.User
+	if err := database.SharefitDB.Where("id = ?", userID).First(&user).Error; err != nil {
+		return nil, err
+	}
+
+	if err := database.SharefitDB.Delete(&user).Error; err != nil {
+		return nil, err
+	}
+
+	return &model.User{
+		ID:          fmt.Sprint(user.ID),
+		Name:        user.Name,
+		PhoneNumber: user.PhoneNumber,
+	}, nil
+}
+
 func (r *queryResolver) Memberships(ctx context.Context) ([]*model.Membership, error) {
 	var cards []database.Card
 	database.SharefitDB.Find(&cards)
@@ -96,7 +113,6 @@ func (r *queryResolver) Memberships(ctx context.Context) ([]*model.Membership, e
 			CurrCnt:  v.CurrCnt,
 			TotalCnt: v.TotalCnt,
 			Expiry:   v.Expiry,
-			// UserIDs: ,
 		})
 	}
 
@@ -125,6 +141,7 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	var ret []*model.User
 	for _, v := range users {
 		ret = append(ret, &model.User{
+			ID:          fmt.Sprint(v.ID),
 			Name:        v.Name,
 			PhoneNumber: v.PhoneNumber,
 		})
