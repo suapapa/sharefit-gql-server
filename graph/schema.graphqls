@@ -35,14 +35,14 @@ type Membership {
   training: String!
   currCnt: Int!
   totalCnt: Int!
-  expiry: Date!
+  expiry: Time!
   """
   users reperesents users who share this membership
   """
   users: [User!]!
 }
 
-scalar Date
+scalar Time
 
 type User {
   id: ID!
@@ -69,6 +69,16 @@ input NewUser {
   phoneNumber: String!
 }
 
+# input NewMembership {
+#   training: String!
+#   currCnt: Int!
+#   totalCnt: Int!
+#   expiry: Date!
+#   users: [String!]!
+# }
+
 type Mutation {
   createUser(input: NewUser!): User!
+  updateUser(userID: ID, user: NewUser!): User!
+  # createMembership(input: NewMembership!): Membership!
 }

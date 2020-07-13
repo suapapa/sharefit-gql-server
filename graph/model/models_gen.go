@@ -2,6 +2,10 @@
 
 package model
 
+import (
+	"time"
+)
+
 type Center struct {
 	ID          string        `json:"id"`
 	Name        string        `json:"name"`
@@ -12,10 +16,10 @@ type Center struct {
 type Membership struct {
 	ID string `json:"id"`
 	// training represents training course for the membership
-	Training string `json:"training"`
-	CurrCnt  int    `json:"currCnt"`
-	TotalCnt int    `json:"totalCnt"`
-	Expiry   string `json:"expiry"`
+	Training string    `json:"training"`
+	CurrCnt  int       `json:"currCnt"`
+	TotalCnt int       `json:"totalCnt"`
+	Expiry   time.Time `json:"expiry"`
 	// users reperesents users who share this membership
 	Users []*User `json:"users"`
 }
