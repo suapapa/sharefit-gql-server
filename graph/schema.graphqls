@@ -59,9 +59,11 @@ type Center {
 
 type Query {
   memberships: [Membership]
+  membership(membershipID: ID): Membership
   users: [User]
   user(userId: ID): User
   centers: [Center]
+  center(centerID: ID): Center
 }
 
 input NewUser {

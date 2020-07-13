@@ -12,6 +12,25 @@ import (
 	"github.com/suapapa/sharefit-gql-server/internal/database"
 )
 
+func (r *centerResolver) Memberships(ctx context.Context, obj *model.Center) ([]*model.Membership, error) {
+	var cards []database.Card
+	if err := database.SharefitDB.Where("center_id = ?", obj.ID).Find(&cards).Error; err != nil {
+		return nil, err
+	}
+
+	var ret []*model.Membership
+	for _, c := range cards {
+		ret = append(ret, &model.Membership{
+			ID:       fmt.Sprint(c.ID),
+			Training: c.Training,
+			CurrCnt:  c.CurrCnt,
+			TotalCnt: c.TotalCnt,
+			Expiry:   c.Expiry,
+		})
+	}
+	return ret, nil
+}
+
 func (r *membershipResolver) Users(ctx context.Context, obj *model.Membership) ([]*model.User, error) {
 	var users []database.User
 	if err := database.SharefitDB.Where("card_id = ?", obj.ID).Find(&users).Error; err != nil {
@@ -84,6 +103,21 @@ func (r *queryResolver) Memberships(ctx context.Context) ([]*model.Membership, e
 	return ret, nil
 }
 
+func (r *queryResolver) Membership(ctx context.Context, membershipID *string) (*model.Membership, error) {
+	var card database.Card
+	if err := database.SharefitDB.Where("id = ?", membershipID).First(&card).Error; err != nil {
+		return nil, err
+	}
+
+	return &model.Membership{
+		ID:       fmt.Sprint(card.ID),
+		Training: card.Training,
+		CurrCnt:  card.CurrCnt,
+		TotalCnt: card.TotalCnt,
+		Expiry:   card.Expiry,
+	}, nil
+}
+
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	var users []database.User
 	database.SharefitDB.Find(&users)
@@ -113,30 +147,38 @@ func (r *queryResolver) User(ctx context.Context, userID *string) (*model.User, 
 
 func (r *queryResolver) Centers(ctx context.Context) ([]*model.Center, error) {
 	var centers []database.Center
-	database.SharefitDB.Find(&centers)
+	if err := database.SharefitDB.Find(&centers).Error; err != nil {
+		return nil, err
+	}
 
 	var ret []*model.Center
 	for _, v := range centers {
-		database.SharefitDB.Where("center_id = ?", v.ID).Find(&v.Cards)
-		var cards []*model.Membership
-		for _, c := range v.Cards {
-			cards = append(cards, &model.Membership{
-				Training: c.Training,
-				CurrCnt:  c.CurrCnt,
-				TotalCnt: c.TotalCnt,
-				// TODO: ???? should retrive users ????
-			})
-		}
-
 		ret = append(ret, &model.Center{
+			ID:          fmt.Sprint(v.ID),
 			Name:        v.Name,
 			PhoneNumber: v.PhoneNumber,
-			Memberships: cards,
+			// Memberships: cards,
 		})
 	}
 
 	return ret, nil
 }
+
+func (r *queryResolver) Center(ctx context.Context, centerID *string) (*model.Center, error) {
+	var center database.Center
+	if err := database.SharefitDB.Where("id = ?", centerID).First(&center).Error; err != nil {
+		return nil, err
+	}
+
+	return &model.Center{
+		ID:          fmt.Sprint(center.ID),
+		Name:        center.Name,
+		PhoneNumber: center.PhoneNumber,
+	}, nil
+}
+
+// Center returns generated.CenterResolver implementation.
+func (r *Resolver) Center() generated.CenterResolver { return &centerResolver{r} }
 
 // Membership returns generated.MembershipResolver implementation.
 func (r *Resolver) Membership() generated.MembershipResolver { return &membershipResolver{r} }
@@ -147,6 +189,7 @@ func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResol
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+type centerResolver struct{ *Resolver }
 type membershipResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

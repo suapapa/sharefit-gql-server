@@ -36,6 +36,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Center() CenterResolver
 	Membership() MembershipResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
@@ -67,7 +68,9 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		Center      func(childComplexity int, centerID *string) int
 		Centers     func(childComplexity int) int
+		Membership  func(childComplexity int, membershipID *string) int
 		Memberships func(childComplexity int) int
 		User        func(childComplexity int, userID *string) int
 		Users       func(childComplexity int) int
@@ -80,6 +83,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type CenterResolver interface {
+	Memberships(ctx context.Context, obj *model.Center) ([]*model.Membership, error)
+}
 type MembershipResolver interface {
 	Users(ctx context.Context, obj *model.Membership) ([]*model.User, error)
 }
@@ -89,9 +95,11 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	Memberships(ctx context.Context) ([]*model.Membership, error)
+	Membership(ctx context.Context, membershipID *string) (*model.Membership, error)
 	Users(ctx context.Context) ([]*model.User, error)
 	User(ctx context.Context, userID *string) (*model.User, error)
 	Centers(ctx context.Context) ([]*model.Center, error)
+	Center(ctx context.Context, centerID *string) (*model.Center, error)
 }
 
 type executableSchema struct {
@@ -203,12 +211,36 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateUser(childComplexity, args["userID"].(*string), args["user"].(model.NewUser)), true
 
+	case "Query.center":
+		if e.complexity.Query.Center == nil {
+			break
+		}
+
+		args, err := ec.field_Query_center_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Center(childComplexity, args["centerID"].(*string)), true
+
 	case "Query.centers":
 		if e.complexity.Query.Centers == nil {
 			break
 		}
 
 		return e.complexity.Query.Centers(childComplexity), true
+
+	case "Query.membership":
+		if e.complexity.Query.Membership == nil {
+			break
+		}
+
+		args, err := ec.field_Query_membership_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Membership(childComplexity, args["membershipID"].(*string)), true
 
 	case "Query.memberships":
 		if e.complexity.Query.Memberships == nil {
@@ -382,9 +414,11 @@ type Center {
 
 type Query {
   memberships: [Membership]
+  membership(membershipID: ID): Membership
   users: [User]
   user(userId: ID): User
   centers: [Center]
+  center(centerID: ID): Center
 }
 
 input NewUser {
@@ -459,6 +493,34 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_center_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["centerID"]; ok {
+		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["centerID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_membership_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["membershipID"]; ok {
+		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["membershipID"] = arg0
 	return args, nil
 }
 
@@ -625,13 +687,13 @@ func (ec *executionContext) _Center_memberships(ctx context.Context, field graph
 		Object:   "Center",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Memberships, nil
+		return ec.resolvers.Center().Memberships(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -965,6 +1027,44 @@ func (ec *executionContext) _Query_memberships(ctx context.Context, field graphq
 	return ec.marshalOMembership2ᚕᚖgithubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐMembership(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_membership(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_membership_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Membership(rctx, args["membershipID"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Membership)
+	fc.Result = res
+	return ec.marshalOMembership2ᚖgithubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐMembership(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_users(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1063,6 +1163,44 @@ func (ec *executionContext) _Query_centers(ctx context.Context, field graphql.Co
 	res := resTmp.([]*model.Center)
 	fc.Result = res
 	return ec.marshalOCenter2ᚕᚖgithubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐCenter(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_center(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_center_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Center(rctx, args["centerID"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Center)
+	fc.Result = res
+	return ec.marshalOCenter2ᚖgithubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐCenter(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2337,23 +2475,32 @@ func (ec *executionContext) _Center(ctx context.Context, sel ast.SelectionSet, o
 		case "id":
 			out.Values[i] = ec._Center_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 			out.Values[i] = ec._Center_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "phoneNumber":
 			out.Values[i] = ec._Center_phoneNumber(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "memberships":
-			out.Values[i] = ec._Center_memberships(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Center_memberships(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2488,6 +2635,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_memberships(ctx, field)
 				return res
 			})
+		case "membership":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_membership(ctx, field)
+				return res
+			})
 		case "users":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -2519,6 +2677,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_centers(ctx, field)
+				return res
+			})
+		case "center":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_center(ctx, field)
 				return res
 			})
 		case "__type":
