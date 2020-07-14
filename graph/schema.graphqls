@@ -52,6 +52,9 @@ input NewMembership {
 }
 
 type Mutation {
+  """
+  make it accessable only to admin user
+  """
   createUser(input: NewUser!): User!
   updateUser(userID: ID!, input: NewUser!): User!
   deleteUser(userID: ID!): User!

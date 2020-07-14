@@ -11,12 +11,15 @@
 ## todo
 
 * [ ] mutations
-* [ ] remove duplicated for loop in resolve if possible
+* [x] remove duplicated for loop in resolve if possible
+* [ ] authentication
+* [ ] 소셜 로그인
 
 
 ## references
 
 * [gqlgen tutorial](https://gqlgen.com/getting-started/)
-* [graphql-voyager](https://apis.guru/graphql-voyager/)
 * [gql-database](https://www.howtographql.com/graphql-go/4-database/)
+* [gql-authentication](https://www.howtographql.com/graphql-go/6-authentication/)
 * [gorm-query](https://gorm.io/docs/query.html)
+* [graphql-voyager](https://apis.guru/graphql-voyager/)
