@@ -63,9 +63,12 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateUser func(childComplexity int, input model.NewUser) int
-		DeleteUser func(childComplexity int, userID *string) int
-		UpdateUser func(childComplexity int, userID *string, user model.NewUser) int
+		CreateMembership func(childComplexity int, input model.NewMembership) int
+		CreateUser       func(childComplexity int, input model.NewUser) int
+		DeleteMembership func(childComplexity int, membershipID string) int
+		DeleteUser       func(childComplexity int, userID string) int
+		UpdateMembership func(childComplexity int, membershipID string, input model.NewMembership) int
+		UpdateUser       func(childComplexity int, userID string, user model.NewUser) int
 	}
 
 	Query struct {
@@ -92,8 +95,11 @@ type MembershipResolver interface {
 }
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.NewUser) (*model.User, error)
-	UpdateUser(ctx context.Context, userID *string, user model.NewUser) (*model.User, error)
-	DeleteUser(ctx context.Context, userID *string) (*model.User, error)
+	UpdateUser(ctx context.Context, userID string, user model.NewUser) (*model.User, error)
+	DeleteUser(ctx context.Context, userID string) (*model.User, error)
+	CreateMembership(ctx context.Context, input model.NewMembership) (*model.Membership, error)
+	UpdateMembership(ctx context.Context, membershipID string, input model.NewMembership) (*model.Membership, error)
+	DeleteMembership(ctx context.Context, membershipID string) (*model.Membership, error)
 }
 type QueryResolver interface {
 	Memberships(ctx context.Context) ([]*model.Membership, error)
@@ -189,6 +195,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Membership.Users(childComplexity), true
 
+	case "Mutation.createMembership":
+		if e.complexity.Mutation.CreateMembership == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createMembership_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateMembership(childComplexity, args["input"].(model.NewMembership)), true
+
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
 			break
@@ -201,6 +219,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(model.NewUser)), true
 
+	case "Mutation.deleteMembership":
+		if e.complexity.Mutation.DeleteMembership == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteMembership_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteMembership(childComplexity, args["membershipID"].(string)), true
+
 	case "Mutation.deleteUser":
 		if e.complexity.Mutation.DeleteUser == nil {
 			break
@@ -211,7 +241,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteUser(childComplexity, args["userID"].(*string)), true
+		return e.complexity.Mutation.DeleteUser(childComplexity, args["userID"].(string)), true
+
+	case "Mutation.updateMembership":
+		if e.complexity.Mutation.UpdateMembership == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateMembership_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateMembership(childComplexity, args["membershipID"].(string), args["input"].(model.NewMembership)), true
 
 	case "Mutation.updateUser":
 		if e.complexity.Mutation.UpdateUser == nil {
@@ -223,7 +265,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateUser(childComplexity, args["userID"].(*string), args["user"].(model.NewUser)), true
+		return e.complexity.Mutation.UpdateUser(childComplexity, args["userID"].(string), args["user"].(model.NewUser)), true
 
 	case "Query.center":
 		if e.complexity.Query.Center == nil {
@@ -409,21 +451,24 @@ type Query {
 input NewUser {
   name: String!
   phoneNumber: String!
+  membershipID: ID
 }
 
-# input NewMembership {
-#   training: String!
-#   currCnt: Int!
-#   totalCnt: Int!
-#   expiry: Date!
-#   users: [String!]!
-# }
+input NewMembership {
+  training: String!
+  currCnt: Int!
+  totalCnt: Int!
+  expiry: Time!
+  centerID: ID
+}
 
 type Mutation {
   createUser(input: NewUser!): User!
-  updateUser(userID: ID, user: NewUser!): User!
-  deleteUser(userID: ID): User!
-  # createMembership(input: NewMembership!): Membership!
+  updateUser(userID: ID!, user: NewUser!): User!
+  deleteUser(userID: ID!): User!
+  createMembership(input: NewMembership!): Membership!
+  updateMembership(membershipID: ID!, input: NewMembership!): Membership!
+  deleteMembership(membershipID: ID!): Membership!
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -431,6 +476,20 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_createMembership_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.NewMembership
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNNewMembership2githubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐNewMembership(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -446,12 +505,26 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_deleteMembership_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["membershipID"]; ok {
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["membershipID"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *string
+	var arg0 string
 	if tmp, ok := rawArgs["userID"]; ok {
-		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -460,12 +533,34 @@ func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, 
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_updateMembership_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["membershipID"]; ok {
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["membershipID"] = arg0
+	var arg1 model.NewMembership
+	if tmp, ok := rawArgs["input"]; ok {
+		arg1, err = ec.unmarshalNNewMembership2githubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐNewMembership(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *string
+	var arg0 string
 	if tmp, ok := rawArgs["userID"]; ok {
-		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -979,7 +1074,7 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateUser(rctx, args["userID"].(*string), args["user"].(model.NewUser))
+		return ec.resolvers.Mutation().UpdateUser(rctx, args["userID"].(string), args["user"].(model.NewUser))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1020,7 +1115,7 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteUser(rctx, args["userID"].(*string))
+		return ec.resolvers.Mutation().DeleteUser(rctx, args["userID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1035,6 +1130,129 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 	res := resTmp.(*model.User)
 	fc.Result = res
 	return ec.marshalNUser2ᚖgithubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_createMembership(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createMembership_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateMembership(rctx, args["input"].(model.NewMembership))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Membership)
+	fc.Result = res
+	return ec.marshalNMembership2ᚖgithubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐMembership(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateMembership(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateMembership_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateMembership(rctx, args["membershipID"].(string), args["input"].(model.NewMembership))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Membership)
+	fc.Result = res
+	return ec.marshalNMembership2ᚖgithubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐMembership(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteMembership(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteMembership_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteMembership(rctx, args["membershipID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Membership)
+	fc.Result = res
+	return ec.marshalNMembership2ᚖgithubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐMembership(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_memberships(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2470,6 +2688,48 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputNewMembership(ctx context.Context, obj interface{}) (model.NewMembership, error) {
+	var it model.NewMembership
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "training":
+			var err error
+			it.Training, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "currCnt":
+			var err error
+			it.CurrCnt, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "totalCnt":
+			var err error
+			it.TotalCnt, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "expiry":
+			var err error
+			it.Expiry, err = ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "centerID":
+			var err error
+			it.CenterID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputNewUser(ctx context.Context, obj interface{}) (model.NewUser, error) {
 	var it model.NewUser
 	var asMap = obj.(map[string]interface{})
@@ -2485,6 +2745,12 @@ func (ec *executionContext) unmarshalInputNewUser(ctx context.Context, obj inter
 		case "phoneNumber":
 			var err error
 			it.PhoneNumber, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "membershipID":
+			var err error
+			it.MembershipID, err = ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2641,6 +2907,21 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "deleteUser":
 			out.Values[i] = ec._Mutation_deleteUser(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createMembership":
+			out.Values[i] = ec._Mutation_createMembership(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updateMembership":
+			out.Values[i] = ec._Mutation_updateMembership(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteMembership":
+			out.Values[i] = ec._Mutation_deleteMembership(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3075,6 +3356,10 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) marshalNMembership2githubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐMembership(ctx context.Context, sel ast.SelectionSet, v model.Membership) graphql.Marshaler {
+	return ec._Membership(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNMembership2ᚕᚖgithubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐMembership(ctx context.Context, sel ast.SelectionSet, v []*model.Membership) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -3110,6 +3395,20 @@ func (ec *executionContext) marshalNMembership2ᚕᚖgithubᚗcomᚋsuapapaᚋsh
 	}
 	wg.Wait()
 	return ret
+}
+
+func (ec *executionContext) marshalNMembership2ᚖgithubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐMembership(ctx context.Context, sel ast.SelectionSet, v *model.Membership) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Membership(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNNewMembership2githubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐNewMembership(ctx context.Context, v interface{}) (model.NewMembership, error) {
+	return ec.unmarshalInputNewMembership(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNNewUser2githubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐNewUser(ctx context.Context, v interface{}) (model.NewUser, error) {

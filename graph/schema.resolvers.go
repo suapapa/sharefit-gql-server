@@ -6,6 +6,7 @@ package graph
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/suapapa/sharefit-gql-server/graph/generated"
 	"github.com/suapapa/sharefit-gql-server/graph/model"
@@ -55,18 +56,18 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 		PhoneNumber: input.PhoneNumber,
 	}
 
-	database.SharefitDB.Create(&user)
+	if err := database.SharefitDB.Create(&user).Error; err != nil {
+		return nil, err
+	}
 
-	ret := model.User{
+	return &model.User{
 		ID:          fmt.Sprint(user.ID),
 		Name:        user.Name,
 		PhoneNumber: user.PhoneNumber,
-	}
-
-	return &ret, nil
+	}, nil
 }
 
-func (r *mutationResolver) UpdateUser(ctx context.Context, userID *string, user model.NewUser) (*model.User, error) {
+func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, user model.NewUser) (*model.User, error) {
 	var u database.User
 	if err := database.SharefitDB.Where("id = ?", userID).Find(&u).Error; err != nil {
 		return nil, err
@@ -74,8 +75,15 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID *string, user 
 
 	u.Name = user.Name
 	u.PhoneNumber = user.PhoneNumber
+	cid, err := strconv.ParseUint(*user.MembershipID, 10, 32)
+	if err != nil {
+		return nil, err
+	}
+	u.CardID = uint(cid)
 
-	database.SharefitDB.Save(&u)
+	if err := database.SharefitDB.Save(&u).Error; err != nil {
+		return nil, err
+	}
 
 	return &model.User{
 		ID:          fmt.Sprint(u.ID),
@@ -84,7 +92,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID *string, user 
 	}, nil
 }
 
-func (r *mutationResolver) DeleteUser(ctx context.Context, userID *string) (*model.User, error) {
+func (r *mutationResolver) DeleteUser(ctx context.Context, userID string) (*model.User, error) {
 	var user database.User
 	if err := database.SharefitDB.Where("id = ?", userID).First(&user).Error; err != nil {
 		return nil, err
@@ -98,6 +106,75 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, userID *string) (*mod
 		ID:          fmt.Sprint(user.ID),
 		Name:        user.Name,
 		PhoneNumber: user.PhoneNumber,
+	}, nil
+}
+
+func (r *mutationResolver) CreateMembership(ctx context.Context, input model.NewMembership) (*model.Membership, error) {
+	card := database.Card{
+		Training: input.Training,
+		CurrCnt:  input.CurrCnt,
+		TotalCnt: input.TotalCnt,
+		Expiry:   input.Expiry,
+	}
+
+	if err := database.SharefitDB.Create(&card).Error; err != nil {
+		return nil, err
+	}
+
+	return &model.Membership{
+		ID:       fmt.Sprint(card.ID),
+		Training: card.Training,
+		CurrCnt:  card.CurrCnt,
+		TotalCnt: card.TotalCnt,
+		Expiry:   card.Expiry,
+	}, nil
+}
+
+func (r *mutationResolver) UpdateMembership(ctx context.Context, membershipID string, input model.NewMembership) (*model.Membership, error) {
+	var card database.Card
+	if err := database.SharefitDB.Where("id = ?", membershipID).First(&card).Error; err != nil {
+		return nil, err
+	}
+
+	card.Training = input.Training
+	cid, err := strconv.ParseUint(*input.CenterID, 10, 32)
+	if err != nil {
+		return nil, err
+	}
+	card.CenterID = uint(cid)
+	card.CurrCnt = input.CurrCnt
+	card.TotalCnt = input.TotalCnt
+	card.Expiry = input.Expiry
+
+	if err := database.SharefitDB.Save(&card).Error; err != nil {
+		return nil, err
+	}
+
+	return &model.Membership{
+		ID:       fmt.Sprint(card.ID),
+		Training: card.Training,
+		CurrCnt:  card.CurrCnt,
+		TotalCnt: card.TotalCnt,
+		Expiry:   card.Expiry,
+	}, nil
+}
+
+func (r *mutationResolver) DeleteMembership(ctx context.Context, membershipID string) (*model.Membership, error) {
+	var card database.Card
+	if err := database.SharefitDB.Where("id = ?", membershipID).First(&card).Error; err != nil {
+		return nil, err
+	}
+
+	if err := database.SharefitDB.Delete(&card).Error; err != nil {
+		return nil, err
+	}
+
+	return &model.Membership{
+		ID:       fmt.Sprint(card.ID),
+		Training: card.Training,
+		CurrCnt:  card.CurrCnt,
+		TotalCnt: card.TotalCnt,
+		Expiry:   card.Expiry,
 	}, nil
 }
 

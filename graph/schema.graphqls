@@ -40,19 +40,22 @@ type Query {
 input NewUser {
   name: String!
   phoneNumber: String!
+  membershipID: ID
 }
 
-# input NewMembership {
-#   training: String!
-#   currCnt: Int!
-#   totalCnt: Int!
-#   expiry: Date!
-#   users: [String!]!
-# }
+input NewMembership {
+  training: String!
+  currCnt: Int!
+  totalCnt: Int!
+  expiry: Time!
+  centerID: ID
+}
 
 type Mutation {
   createUser(input: NewUser!): User!
-  updateUser(userID: ID, user: NewUser!): User!
-  deleteUser(userID: ID): User!
-  # createMembership(input: NewMembership!): Membership!
+  updateUser(userID: ID!, user: NewUser!): User!
+  deleteUser(userID: ID!): User!
+  createMembership(input: NewMembership!): Membership!
+  updateMembership(membershipID: ID!, input: NewMembership!): Membership!
+  deleteMembership(membershipID: ID!): Membership!
 }
