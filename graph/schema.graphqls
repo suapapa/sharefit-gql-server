@@ -53,7 +53,7 @@ input NewMembership {
 
 type Mutation {
   createUser(input: NewUser!): User!
-  updateUser(userID: ID!, user: NewUser!): User!
+  updateUser(userID: ID!, input: NewUser!): User!
   deleteUser(userID: ID!): User!
   createMembership(input: NewMembership!): Membership!
   updateMembership(membershipID: ID!, input: NewMembership!): Membership!

@@ -68,7 +68,7 @@ type ComplexityRoot struct {
 		DeleteMembership func(childComplexity int, membershipID string) int
 		DeleteUser       func(childComplexity int, userID string) int
 		UpdateMembership func(childComplexity int, membershipID string, input model.NewMembership) int
-		UpdateUser       func(childComplexity int, userID string, user model.NewUser) int
+		UpdateUser       func(childComplexity int, userID string, input model.NewUser) int
 	}
 
 	Query struct {
@@ -95,7 +95,7 @@ type MembershipResolver interface {
 }
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.NewUser) (*model.User, error)
-	UpdateUser(ctx context.Context, userID string, user model.NewUser) (*model.User, error)
+	UpdateUser(ctx context.Context, userID string, input model.NewUser) (*model.User, error)
 	DeleteUser(ctx context.Context, userID string) (*model.User, error)
 	CreateMembership(ctx context.Context, input model.NewMembership) (*model.Membership, error)
 	UpdateMembership(ctx context.Context, membershipID string, input model.NewMembership) (*model.Membership, error)
@@ -265,7 +265,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateUser(childComplexity, args["userID"].(string), args["user"].(model.NewUser)), true
+		return e.complexity.Mutation.UpdateUser(childComplexity, args["userID"].(string), args["input"].(model.NewUser)), true
 
 	case "Query.center":
 		if e.complexity.Query.Center == nil {
@@ -464,7 +464,7 @@ input NewMembership {
 
 type Mutation {
   createUser(input: NewUser!): User!
-  updateUser(userID: ID!, user: NewUser!): User!
+  updateUser(userID: ID!, input: NewUser!): User!
   deleteUser(userID: ID!): User!
   createMembership(input: NewMembership!): Membership!
   updateMembership(membershipID: ID!, input: NewMembership!): Membership!
@@ -567,13 +567,13 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 	}
 	args["userID"] = arg0
 	var arg1 model.NewUser
-	if tmp, ok := rawArgs["user"]; ok {
+	if tmp, ok := rawArgs["input"]; ok {
 		arg1, err = ec.unmarshalNNewUser2githubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐNewUser(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["user"] = arg1
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -1074,7 +1074,7 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateUser(rctx, args["userID"].(string), args["user"].(model.NewUser))
+		return ec.resolvers.Mutation().UpdateUser(rctx, args["userID"].(string), args["input"].(model.NewUser))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

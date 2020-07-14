@@ -67,15 +67,15 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	}, nil
 }
 
-func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, user model.NewUser) (*model.User, error) {
+func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input model.NewUser) (*model.User, error) {
 	var u database.User
 	if err := database.SharefitDB.Where("id = ?", userID).Find(&u).Error; err != nil {
 		return nil, err
 	}
 
-	u.Name = user.Name
-	u.PhoneNumber = user.PhoneNumber
-	cid, err := strconv.ParseUint(*user.MembershipID, 10, 32)
+	u.Name = input.Name
+	u.PhoneNumber = input.PhoneNumber
+	cid, err := strconv.ParseUint(*input.MembershipID, 10, 32)
 	if err != nil {
 		return nil, err
 	}
