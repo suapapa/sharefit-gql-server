@@ -26,6 +26,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	err = database.Migrate()
+	if err != nil {
+		panic(err)
+	}
 
 	router := chi.NewRouter()
 	router.Use(auth.Middleware(database.SharefitDB))

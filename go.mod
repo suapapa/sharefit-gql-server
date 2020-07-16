@@ -8,4 +8,5 @@ require (
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/jinzhu/gorm v1.9.14
 	github.com/vektah/gqlparser/v2 v2.0.1
+	gopkg.in/gormigrate.v1 v1.6.0
 )
