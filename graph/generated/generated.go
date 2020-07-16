@@ -67,6 +67,7 @@ type ComplexityRoot struct {
 		CreateUser       func(childComplexity int, input model.NewUser) int
 		DeleteMembership func(childComplexity int, membershipID string) int
 		DeleteUser       func(childComplexity int, userID string) int
+		Login            func(childComplexity int, username string, password string) int
 		UpdateMembership func(childComplexity int, membershipID string, input model.NewMembership) int
 		UpdateUser       func(childComplexity int, userID string, input model.NewUser) int
 	}
@@ -94,7 +95,8 @@ type MembershipResolver interface {
 	Users(ctx context.Context, obj *model.Membership) ([]*model.User, error)
 }
 type MutationResolver interface {
-	CreateUser(ctx context.Context, input model.NewUser) (*model.User, error)
+	Login(ctx context.Context, username string, password string) (string, error)
+	CreateUser(ctx context.Context, input model.NewUser) (string, error)
 	UpdateUser(ctx context.Context, userID string, input model.NewUser) (*model.User, error)
 	DeleteUser(ctx context.Context, userID string) (*model.User, error)
 	CreateMembership(ctx context.Context, input model.NewMembership) (*model.Membership, error)
@@ -242,6 +244,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteUser(childComplexity, args["userID"].(string)), true
+
+	case "Mutation.login":
+		if e.complexity.Mutation.Login == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_login_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.Login(childComplexity, args["username"].(string), args["password"].(string)), true
 
 	case "Mutation.updateMembership":
 		if e.complexity.Mutation.UpdateMembership == nil {
@@ -450,6 +464,7 @@ type Query {
 
 input NewUser {
   name: String!
+  password: String!
   phoneNumber: String!
   membershipID: ID
 }
@@ -463,7 +478,11 @@ input NewMembership {
 }
 
 type Mutation {
-  createUser(input: NewUser!): User!
+  """
+  make it accessable only to admin user
+  """
+  login(username: String!, password: String!): String!
+  createUser(input: NewUser!): String!
   updateUser(userID: ID!, input: NewUser!): User!
   deleteUser(userID: ID!): User!
   createMembership(input: NewMembership!): Membership!
@@ -530,6 +549,28 @@ func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, 
 		}
 	}
 	args["userID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["username"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["username"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["password"]; ok {
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["password"] = arg1
 	return args, nil
 }
 
@@ -1009,6 +1050,47 @@ func (ec *executionContext) _Membership_users(ctx context.Context, field graphql
 	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_login_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().Login(rctx, args["username"].(string), args["password"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1045,9 +1127,9 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋsuapapaᚋsharefitᚑgqlᚑserverᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2742,6 +2824,12 @@ func (ec *executionContext) unmarshalInputNewUser(ctx context.Context, obj inter
 			if err != nil {
 				return it, err
 			}
+		case "password":
+			var err error
+			it.Password, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "phoneNumber":
 			var err error
 			it.PhoneNumber, err = ec.unmarshalNString2string(ctx, v)
@@ -2895,6 +2983,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "login":
+			out.Values[i] = ec._Mutation_login(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "createUser":
 			out.Values[i] = ec._Mutation_createUser(ctx, field)
 			if out.Values[i] == graphql.Null {

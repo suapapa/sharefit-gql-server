@@ -16,6 +16,7 @@ type NewMembership struct {
 
 type NewUser struct {
 	Name         string  `json:"name"`
+	Password     string  `json:"password"`
 	PhoneNumber  string  `json:"phoneNumber"`
 	MembershipID *string `json:"membershipID"`
 }

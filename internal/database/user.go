@@ -46,12 +46,11 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
-// GetUserIDByUsername check if a user exists in database by given username
+// GetUserByUsername check if a user exists in database by given username
 func GetUserByUsername(username string) (*User, error) {
 	var user User
 	if err := SharefitDB.Where("name = ?", username).First(&user).Error; err != nil {
-		return &user, nil
+		return nil, fmt.Errorf("no such a user, %s", username)
 	}
-
-	return nil, fmt.Errorf("no such a user, %s", username)
+	return &user, nil
 }

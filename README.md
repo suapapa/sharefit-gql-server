@@ -10,8 +10,9 @@
 
 ## todo
 
-* [ ] mutations
 * [ ] authentication
+* [ ] restrict mutations with login jwt key
+* [x] login mutations
 * [x] remove duplicated for loop in resolve if possible
 
 

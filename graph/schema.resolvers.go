@@ -6,10 +6,12 @@ package graph
 import (
 	"context"
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/suapapa/sharefit-gql-server/graph/generated"
 	"github.com/suapapa/sharefit-gql-server/graph/model"
+	"github.com/suapapa/sharefit-gql-server/internal/auth"
 	"github.com/suapapa/sharefit-gql-server/internal/database"
 )
 
@@ -50,21 +52,41 @@ func (r *membershipResolver) Users(ctx context.Context, obj *model.Membership) (
 	return ret, nil
 }
 
-func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
-	user := database.User{
-		Name:        input.Name,
-		PhoneNumber: input.PhoneNumber,
+func (r *mutationResolver) Login(ctx context.Context, username string, password string) (string, error) {
+	user, err := database.GetUserByUsername(username)
+	if err != nil {
+		log.Println("err:", err)
+		return "", err
+	}
+	// hashedPassword, err := database.HashPassword(password)
+	// if err != nil {
+	// 	return "", err
+	// }
+
+	if !database.CheckPasswordHash(password, user.Password) {
+		log.Println("auth failed")
+		return "", err
+	}
+
+	return auth.GenerateToken(username)
+}
+
+func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (string, error) {
+	user, err := database.CreateNewUser(input.Name,
+		input.Password,
+		input.PhoneNumber,
+		0, // TODO: fix here
+	)
+	if err != nil {
+		return "", err
 	}
 
 	if err := database.SharefitDB.Create(&user).Error; err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return &model.User{
-		ID:          fmt.Sprint(user.ID),
-		Name:        user.Name,
-		PhoneNumber: user.PhoneNumber,
-	}, nil
+	// "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1OTQ5OTA2NTYsInVzZXJuYW1lIjoi7JiB7Iud7J207ZiVIn0.2WRkgw8qk6-eB1fK8bxRYqGrGxGPrsfxdr8_4de0_04"
+	return auth.GenerateToken(user.Name)
 }
 
 func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input model.NewUser) (*model.User, error) {

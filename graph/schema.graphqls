@@ -39,6 +39,7 @@ type Query {
 
 input NewUser {
   name: String!
+  password: String!
   phoneNumber: String!
   membershipID: ID
 }
@@ -55,7 +56,8 @@ type Mutation {
   """
   make it accessable only to admin user
   """
-  createUser(input: NewUser!): User!
+  login(username: String!, password: String!): String!
+  createUser(input: NewUser!): String!
   updateUser(userID: ID!, input: NewUser!): User!
   deleteUser(userID: ID!): User!
   createMembership(input: NewMembership!): Membership!
