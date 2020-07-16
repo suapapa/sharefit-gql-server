@@ -75,11 +75,13 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, userID string, input 
 
 	u.Name = input.Name
 	u.PhoneNumber = input.PhoneNumber
-	cid, err := strconv.ParseUint(*input.MembershipID, 10, 32)
-	if err != nil {
-		return nil, err
+	if input.MembershipID != nil {
+		cid, err := strconv.ParseUint(*input.MembershipID, 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		u.CardID = uint(cid)
 	}
-	u.CardID = uint(cid)
 
 	if err := database.SharefitDB.Save(&u).Error; err != nil {
 		return nil, err
@@ -137,11 +139,13 @@ func (r *mutationResolver) UpdateMembership(ctx context.Context, membershipID st
 	}
 
 	card.Training = input.Training
-	cid, err := strconv.ParseUint(*input.CenterID, 10, 32)
-	if err != nil {
-		return nil, err
+	if input.CenterID != nil {
+		cid, err := strconv.ParseUint(*input.CenterID, 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		card.CenterID = uint(cid)
 	}
-	card.CenterID = uint(cid)
 	card.CurrCnt = input.CurrCnt
 	card.TotalCnt = input.TotalCnt
 	card.Expiry = input.Expiry

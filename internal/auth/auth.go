@@ -30,7 +30,7 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 
 			// Allow unauthenticated users in
 			if err != nil || c == nil {
-				log.Println("allow unauthenticated users")
+				// log.Println("allow unauthenticated users")
 				next.ServeHTTP(w, r)
 				return
 			}

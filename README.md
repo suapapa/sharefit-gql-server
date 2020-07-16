@@ -11,9 +11,8 @@
 ## todo
 
 * [ ] mutations
-* [x] remove duplicated for loop in resolve if possible
 * [ ] authentication
-* [ ] 소셜 로그인
+* [x] remove duplicated for loop in resolve if possible
 
 
 ## references
