@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/jinzhu/gorm"
@@ -34,6 +35,8 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 				http.Error(w, "Invalid token", http.StatusForbidden)
 				return
 			}
+
+			log.Println("hit middleware")
 
 			user, err := database.GetUserByUsername(username)
 			if err != nil {

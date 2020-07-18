@@ -72,10 +72,20 @@ func (r *mutationResolver) Login(ctx context.Context, username string, password 
 }
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (string, error) {
-	user, err := database.CreateNewUser(input.Name,
+	membershipID := uint(0)
+	if input.MembershipID != nil {
+		cid, err := strconv.ParseUint(*input.MembershipID, 10, 32)
+		if err != nil {
+			return "", err
+		}
+		membershipID = uint(cid)
+	}
+
+	user, err := database.CreateNewUser(
+		input.Name,
 		input.Password,
 		input.PhoneNumber,
-		0, // TODO: fix here
+		membershipID,
 	)
 	if err != nil {
 		return "", err
@@ -85,7 +95,6 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 		return "", err
 	}
 
-	// "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1OTQ5OTA2NTYsInVzZXJuYW1lIjoi7JiB7Iud7J207ZiVIn0.2WRkgw8qk6-eB1fK8bxRYqGrGxGPrsfxdr8_4de0_04"
 	return auth.GenerateToken(user.Name)
 }
 
